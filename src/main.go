@@ -34,18 +34,6 @@ func createNewClient() (*zbc.Client) {
 	return zbClient
 }
 
-func loadTopologie(zbClient *zbc.Client) {
-	fmt.Println("Load broker topologie")
-
-	topology, err := zbClient.Topology()
-	if err != nil {
-		panic(err)
-	}
-
-	b, err := json.MarshalIndent(topology, "", "    ")
-	fmt.Println("Topologie: ", string(b))
-}
-
 func deployProcess(zbClient *zbc.Client) {
 	fmt.Printf("Deploy '%s' process '%s'\n", zbc.BpmnXml, processFileBpmn)
 
