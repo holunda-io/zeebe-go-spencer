@@ -28,8 +28,17 @@ func waitForTaskAndComplete(subscriptionCh chan *zbc.SubscriptionEvent, zbClient
 
 		message := <-subscriptionCh
 		var payload map[string]interface{}
-		msgpack.Unmarshal(message.Task.Payload, &payload)
+
+		err := msgpack.Unmarshal(message.Task.Payload, &payload)
+		if err != nil {
+			panic(err)
+		}
+
 		fmt.Println("Current health status: ", payload["health"])
+		payload["attack"] = "special"
+
+		p, err := msgpack.Marshal(payload)
+		message.Task.Payload = p
 
 		// complete task after processing
 		response, _ := zbClient.CompleteTask(message)
