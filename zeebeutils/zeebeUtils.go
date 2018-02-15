@@ -55,14 +55,14 @@ func StartProcess(zbClient *zbc.Client) {
 	fmt.Println("Start Process responce: ", msg.String())
 }
 
-func CreateSubscription(zbClient *zbc.Client, task string) (chan *zbc.SubscriptionEvent, *zbmsgpack.TaskSubscription) {
+func CreateSubscription(zbClient *zbc.Client, task string) (chan *zbc.SubscriptionEvent, *zbmsgpack.TaskSubscriptionInfo) {
 	fmt.Println("Open task subscription for ", task)
 
 	subscriptionCh, subscription, _ := zbClient.TaskConsumer(topicName, "lockOwner", task)
 	return subscriptionCh, subscription
 }
 
-func StartGoRoutineToCloseSubscriptionOnExit(zbClient *zbc.Client, subscription *zbmsgpack.TaskSubscription) {
+func StartGoRoutineToCloseSubscriptionOnExit(zbClient *zbc.Client, subscription *zbmsgpack.TaskSubscriptionInfo) {
 	fmt.Println("Create go routine which waits for app interrrupt")
 
 	osCh := make(chan os.Signal, 1)
@@ -70,12 +70,7 @@ func StartGoRoutineToCloseSubscriptionOnExit(zbClient *zbc.Client, subscription 
 	go func() {
 		<-osCh
 		fmt.Println("Closing subscription.")
-		_, err := zbClient.CloseTaskSubscription(subscription)
-		if err != nil {
-			fmt.Println("failed to close subscription: ", err)
-		} else {
-			fmt.Println("Subscription closed.")
-		}
+		zbClient.CloseTaskSubscription(subscription)
 		os.Exit(0)
 	}()
 }
