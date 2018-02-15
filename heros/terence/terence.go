@@ -15,33 +15,58 @@ func InitTerence() {
 
 	zbClient := zeebeutils.CreateNewClient()
 
-	subscriptionCh, subscription := zeebeutils.CreateSubscription(zbClient, taskChoose)
+	subscriptionCh := zeebeutils.CreateSubscription(zbClient, taskChoose)
+	subscriptionCh3 := zeebeutils.CreateSubscription(zbClient, taskSpecial)
 
-	zeebeutils.StartGoRoutineToCloseSubscriptionOnExit(zbClient, subscription)
-
-	waitForTaskAndComplete(subscriptionCh, zbClient)
+	go attackSpecial(subscriptionCh3, zbClient)
+	chooseAttack(subscriptionCh, zbClient)
 }
 
-func waitForTaskAndComplete(subscriptionCh chan *zbc.SubscriptionEvent, zbClient *zbc.Client) {
-	for {
-		fmt.Println("Wait for Task A")
+func attackSpecial(subscriptionCh chan *zbc.SubscriptionEvent, zbClient *zbc.Client) {
+	for{
+		fmt.Println("Wait to attack")
 
 		message := <-subscriptionCh
-		var payload map[string]interface{}
+		var payload zeebeutils.GameState
 
 		err := msgpack.Unmarshal(message.Task.Payload, &payload)
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println("attacking")
 
-		fmt.Println("Current health status: ", payload["health"])
-		payload["attack"] = "special"
+		payload.Health = payload.Health - 10
+		fmt.Println("Current health status: ", payload.Health)
 
 		p, err := msgpack.Marshal(payload)
 		message.Task.Payload = p
 
 		// complete task after processing
 		response, _ := zbClient.CompleteTask(message)
-		fmt.Println("Complete Task Responce: ", response)
+		fmt.Println("Complete Task Response: ", response)
+	}
+}
+
+func chooseAttack(subscriptionCh chan *zbc.SubscriptionEvent, zbClient *zbc.Client) {
+	for {
+		fmt.Println("Wait for Task A")
+
+		message := <-subscriptionCh
+		var payload zeebeutils.GameState
+
+		err := msgpack.Unmarshal(message.Task.Payload, &payload)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println("Current health status: ", payload.Health)
+		payload.Decision = "special"
+
+		p, err := msgpack.Marshal(payload)
+		message.Task.Payload = p
+
+		// complete task after processing
+		response, _ := zbClient.CompleteTask(message)
+		fmt.Println("Complete Task Response: ", response)
 	}
 }

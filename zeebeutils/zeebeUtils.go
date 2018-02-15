@@ -7,6 +7,7 @@ import (
 	"github.com/zeebe-io/zbc-go/zbc/zbmsgpack"
 	"os"
 	"os/signal"
+	"github.com/vmihailenco/msgpack"
 )
 
 const topicName = "default-topic"
@@ -42,10 +43,11 @@ func DeployProcess(zbClient *zbc.Client) {
 func StartProcess(zbClient *zbc.Client) {
 	fmt.Println("Start process ", processId)
 
-	payload := make(map[string]interface{})
-	payload["health"] = "100"
+	payload := new(GameState)
+	payload.Health = 100
 
-	instance := zbc.NewWorkflowInstance(processId, -1, payload)
+	instance := zbc.NewWorkflowInstance(processId, -1, make(map[string]interface{}))
+	instance.Payload, _ = msgpack.Marshal(payload)
 	msg, err := zbClient.CreateWorkflowInstance(topicName, instance)
 
 	if err != nil {
@@ -55,11 +57,13 @@ func StartProcess(zbClient *zbc.Client) {
 	fmt.Println("Start Process responce: ", msg.String())
 }
 
-func CreateSubscription(zbClient *zbc.Client, task string) (chan *zbc.SubscriptionEvent, *zbmsgpack.TaskSubscriptionInfo) {
+func CreateSubscription(zbClient *zbc.Client, task string) (chan *zbc.SubscriptionEvent) {
 	fmt.Println("Open task subscription for ", task)
 
 	subscriptionCh, subscription, _ := zbClient.TaskConsumer(topicName, "lockOwner", task)
-	return subscriptionCh, subscription
+
+	StartGoRoutineToCloseSubscriptionOnExit(zbClient, subscription)
+	return subscriptionCh
 }
 
 func StartGoRoutineToCloseSubscriptionOnExit(zbClient *zbc.Client, subscription *zbmsgpack.TaskSubscriptionInfo) {
