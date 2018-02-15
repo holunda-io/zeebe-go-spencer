@@ -37,14 +37,16 @@ func DeployProcess(zbClient *zbc.Client) {
 		panic(errWorkflowDeploymentFailed)
 	}
 
-	fmt.Println("Deployed Process Responce: ", response.String())
+	fmt.Println("Deployed Process Response: ", response.String())
 }
 
-func StartProcess(zbClient *zbc.Client) {
+func StartProcess() {
+	zbClient := CreateNewClient()
+
 	fmt.Println("Start process ", processId)
 
 	payload := new(GameState)
-	payload.Health = 100
+	payload.BaddieHealth = 100
 
 	instance := zbc.NewWorkflowInstance(processId, -1, make(map[string]interface{}))
 	instance.Payload, _ = msgpack.Marshal(payload)
@@ -54,7 +56,7 @@ func StartProcess(zbClient *zbc.Client) {
 		panic(err)
 	}
 
-	fmt.Println("Start Process responce: ", msg.String())
+	fmt.Println("Start Process response: ", msg.String())
 }
 
 func CreateSubscription(zbClient *zbc.Client, task string) (chan *zbc.SubscriptionEvent) {
