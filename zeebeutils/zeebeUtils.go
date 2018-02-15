@@ -58,7 +58,7 @@ func StartProcess(zbClient *zbc.Client) {
 }
 
 func CreateSubscription(zbClient *zbc.Client, task string) (chan *zbc.SubscriptionEvent) {
-	fmt.Println("Open task subscription for ", task)
+	//fmt.Println("Open task subscription for ", task)
 
 	subscriptionCh, subscription, _ := zbClient.TaskConsumer(topicName, "lockOwner", task)
 
@@ -67,7 +67,7 @@ func CreateSubscription(zbClient *zbc.Client, task string) (chan *zbc.Subscripti
 }
 
 func StartGoRoutineToCloseSubscriptionOnExit(zbClient *zbc.Client, subscription *zbmsgpack.TaskSubscriptionInfo) {
-	fmt.Println("Create go routine which waits for app interrrupt")
+	//fmt.Println("Create go routine which waits for app interrrupt")
 
 	osCh := make(chan os.Signal, 1)
 	signal.Notify(osCh, os.Interrupt)

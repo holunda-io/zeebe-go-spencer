@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/vmihailenco/msgpack"
 	"zeebe-go-spencer/zeebeutils"
+	"math/rand"
 )
 
 const taskChoose = "t-choose"
@@ -16,15 +17,17 @@ func InitTerence() {
 	zbClient := zeebeutils.CreateNewClient()
 
 	subscriptionCh := zeebeutils.CreateSubscription(zbClient, taskChoose)
-	subscriptionCh3 := zeebeutils.CreateSubscription(zbClient, taskSpecial)
+	subscriptionChNormal := zeebeutils.CreateSubscription(zbClient, taskNormal)
+	subscriptionChSpecial := zeebeutils.CreateSubscription(zbClient, taskSpecial)
 
-	go attackSpecial(subscriptionCh3, zbClient)
+	go attackNormal(subscriptionChNormal, zbClient)
+	go attackSpecial(subscriptionChSpecial, zbClient)
 	chooseAttack(subscriptionCh, zbClient)
 }
 
 func attackSpecial(subscriptionCh chan *zbc.SubscriptionEvent, zbClient *zbc.Client) {
 	for{
-		fmt.Println("Wait to attack")
+		fmt.Println("Wait for special attack")
 
 		message := <-subscriptionCh
 		var payload zeebeutils.GameState
@@ -33,23 +36,46 @@ func attackSpecial(subscriptionCh chan *zbc.SubscriptionEvent, zbClient *zbc.Cli
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println("attacking")
 
-		payload.Health = payload.Health - 10
 		fmt.Println("Current health status: ", payload.Health)
+		fmt.Println("Do special attack")
+		payload.Health = payload.Health - 50
+		fmt.Println("==> New health status: ", payload.Health)
 
 		p, err := msgpack.Marshal(payload)
 		message.Task.Payload = p
 
-		// complete task after processing
-		response, _ := zbClient.CompleteTask(message)
-		fmt.Println("Complete Task Response: ", response)
+		zbClient.CompleteTask(message)
+	}
+}
+
+func attackNormal(subscriptionCh chan *zbc.SubscriptionEvent, zbClient *zbc.Client) {
+	for{
+		fmt.Println("Wait for normal attack")
+
+		message := <-subscriptionCh
+		var payload zeebeutils.GameState
+
+		err := msgpack.Unmarshal(message.Task.Payload, &payload)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println("Current health status: ", payload.Health)
+		fmt.Println("Do normal attack")
+		payload.Health = payload.Health - 10
+		fmt.Println("==> New health status: ", payload.Health)
+
+		p, err := msgpack.Marshal(payload)
+		message.Task.Payload = p
+
+		zbClient.CompleteTask(message)
 	}
 }
 
 func chooseAttack(subscriptionCh chan *zbc.SubscriptionEvent, zbClient *zbc.Client) {
 	for {
-		fmt.Println("Wait for Task A")
+		fmt.Println("Wait for Choose attack")
 
 		message := <-subscriptionCh
 		var payload zeebeutils.GameState
@@ -59,14 +85,18 @@ func chooseAttack(subscriptionCh chan *zbc.SubscriptionEvent, zbClient *zbc.Clie
 			panic(err)
 		}
 
-		fmt.Println("Current health status: ", payload.Health)
-		payload.Decision = "special"
+		switch rand.Intn(2) {
+			case 1:
+				payload.Decision = "special"
+			default:
+				payload.Decision = "normal"
+		}
+
+		fmt.Println("Choosen attack ", payload.Decision)
 
 		p, err := msgpack.Marshal(payload)
 		message.Task.Payload = p
 
-		// complete task after processing
-		response, _ := zbClient.CompleteTask(message)
-		fmt.Println("Complete Task Response: ", response)
+		zbClient.CompleteTask(message)
 	}
 }
