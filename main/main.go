@@ -2,24 +2,24 @@ package main
 
 import (
 	. "zeebe-go-spencer/zeebeutils"
+	"zeebe-go-spencer/heros"
 	"time"
 	"math/rand"
 	"bufio"
 	"os"
-	"zeebe-go-spencer/heros"
 	"fmt"
 )
 
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	zbClient := CreateNewClient()
+	client := CreateNewClient()
 
-	DeployProcess(zbClient)
+	DeployProcess(client)
 
-	heros.InitHero("t", PlayerSetting{NormalAttack:10, SpecialAttack: 30})
-	heros.InitHero("b", PlayerSetting{NormalAttack:10, SpecialAttack: 40})
-	heros.InitHero("h7", PlayerSetting{NormalAttack:0, SpecialAttack: 50})
+	heros.InitHero(client, "t", PlayerSetting{NormalAttack:10, SpecialAttack: 30})
+	heros.InitHero(client, "b", PlayerSetting{NormalAttack:10, SpecialAttack: 40})
+	heros.InitHero(client, "h7", PlayerSetting{NormalAttack:0, SpecialAttack: 50})
 
 	play()
 }
@@ -30,6 +30,6 @@ func play() {
 
 	for {
 		reader.ReadString('\n')
-		StartProcess()
+		StartProcess(CreateNewClient())
 	}
 }

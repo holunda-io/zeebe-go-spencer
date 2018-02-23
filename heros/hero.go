@@ -2,49 +2,32 @@ package heros
 
 import (
 	"github.com/zeebe-io/zbc-go/zbc"
-	"fmt"
-	"github.com/vmihailenco/msgpack"
 	"zeebe-go-spencer/zeebeutils"
+	"fmt"
 	"math/rand"
 )
 
-func InitHero(prefix string, setting zeebeutils.PlayerSetting) {
-	zbClient := zeebeutils.CreateNewClient()
-	go attack(prefix, setting.NormalAttack, zeebeutils.CreateSubscription(zbClient, prefix + "-normal"), zbClient)
-	go attack(prefix, setting.SpecialAttack, zeebeutils.CreateSubscription(zbClient, prefix + "-special"), zbClient)
-	go chooseAttack(prefix, zeebeutils.CreateSubscription(zbClient, prefix + "-choose"), zbClient)
+func InitHero(client zeebeutils.Client, prefix string, setting zeebeutils.PlayerSetting) {
+	go attack(prefix, setting.NormalAttack, zeebeutils.CreateSubscription(client, prefix + "-normal"), client)
+	go attack(prefix, setting.SpecialAttack, zeebeutils.CreateSubscription(client, prefix + "-special"), client)
+	go chooseAttack(prefix, zeebeutils.CreateSubscription(client, prefix + "-choose"), client)
 }
 
-func attack(prefix string, damage int, subscriptionCh chan *zbc.SubscriptionEvent, zbClient *zbc.Client) {
+func attack(prefix string, damage int, subscriptionCh chan *zbc.SubscriptionEvent, client zeebeutils.Client) {
 	for{
-		message := <-subscriptionCh
-		var payload zeebeutils.GameState
-
-		err := msgpack.Unmarshal(message.Task.Payload, &payload)
-		if err != nil {
-			panic(err)
-		}
+		payload, message := zeebeutils.GetTask(subscriptionCh)
 
 		printFormatted(prefix, "attack with ", damage, " damage")
 		payload.BaddieHealth = payload.BaddieHealth - damage
 		printFormatted(prefix, "==> New health status: ", payload.BaddieHealth)
 
-		p, err := msgpack.Marshal(payload)
-		message.Task.Payload = p
-
-		zbClient.CompleteTask(message)
+		zeebeutils.CompleteTask(client, payload, message)
 	}
 }
 
-func chooseAttack(prefix string, subscriptionCh chan *zbc.SubscriptionEvent, zbClient *zbc.Client) {
+func chooseAttack(prefix string, subscriptionCh chan *zbc.SubscriptionEvent, client zeebeutils.Client) {
 	for {
-		message := <-subscriptionCh
-		var payload zeebeutils.GameState
-
-		err := msgpack.Unmarshal(message.Task.Payload, &payload)
-		if err != nil {
-			panic(err)
-		}
+		payload, message := zeebeutils.GetTask(subscriptionCh)
 
 		switch rand.Intn(2) {
 			case 1:
@@ -55,10 +38,7 @@ func chooseAttack(prefix string, subscriptionCh chan *zbc.SubscriptionEvent, zbC
 
 		printFormatted(prefix, "Choosen attack ", payload.Decision)
 
-		p, err := msgpack.Marshal(payload)
-		message.Task.Payload = p
-
-		zbClient.CompleteTask(message)
+		zeebeutils.CompleteTask(client, payload, message)
 	}
 }
 
