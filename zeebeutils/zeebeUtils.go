@@ -57,8 +57,8 @@ func CreateSubscription(client Client, task string) (chan *zbc.SubscriptionEvent
 	return subscriptionCh
 }
 
-func registerSubscription(subscriptionChannel chan *zbmsgpack.TaskSubscriptionInfo, subscription *zbmsgpack.TaskSubscriptionInfo) {
-	subscriptionChannel <- subscription
+func registerSubscription(closeSubscriptionHandler chan *zbmsgpack.TaskSubscriptionInfo, subscription *zbmsgpack.TaskSubscriptionInfo) {
+	closeSubscriptionHandler <- subscription
 }
 
 

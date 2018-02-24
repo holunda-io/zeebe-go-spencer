@@ -17,9 +17,9 @@ func main() {
 
 	DeployProcess(client)
 
-	heros.InitHero(client, "t", PlayerSetting{NormalAttack:10, SpecialAttack: 30})
-	heros.InitHero(client, "b", PlayerSetting{NormalAttack:10, SpecialAttack: 40})
-	heros.InitHero(client, "h7", PlayerSetting{NormalAttack:0, SpecialAttack: 50})
+	heros.InitHero(client, "t", PlayerSetting{NormalAttack:10, SpecialAttack: 30, AdditionalRange: 5})
+	heros.InitHero(client, "b", PlayerSetting{NormalAttack:10, SpecialAttack: 40, AdditionalRange: 10})
+	heros.InitHero(client, "h7", PlayerSetting{NormalAttack:0, SpecialAttack: 50, AdditionalRange: 20})
 
 	play()
 }

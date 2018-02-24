@@ -8,17 +8,18 @@ import (
 )
 
 func InitHero(client zeebeutils.Client, prefix string, setting zeebeutils.PlayerSetting) {
-	go attack(prefix, setting.NormalAttack, zeebeutils.CreateSubscription(client, prefix + "-normal"), client)
-	go attack(prefix, setting.SpecialAttack, zeebeutils.CreateSubscription(client, prefix + "-special"), client)
+	go attack(prefix, setting.NormalAttack, setting.AdditionalRange, zeebeutils.CreateSubscription(client, prefix + "-normal"), client)
+	go attack(prefix, setting.SpecialAttack, setting.AdditionalRange, zeebeutils.CreateSubscription(client, prefix + "-special"), client)
 	go chooseAttack(prefix, zeebeutils.CreateSubscription(client, prefix + "-choose"), client)
 }
 
-func attack(prefix string, damage int, subscriptionCh chan *zbc.SubscriptionEvent, client zeebeutils.Client) {
+func attack(prefix string, damage, additionalRange int, subscriptionCh chan *zbc.SubscriptionEvent, client zeebeutils.Client) {
 	for{
 		payload, message := zeebeutils.GetTask(subscriptionCh)
 
-		printFormatted(prefix, "attack with ", damage, " damage")
-		payload.BaddieHealth = payload.BaddieHealth - damage
+		doneDamage := damage + calculateAdditionalRange(additionalRange)
+		printFormatted(prefix, "attack with ", doneDamage, " damage")
+		payload.BaddieHealth = payload.BaddieHealth - doneDamage
 		printFormatted(prefix, "==> New health status: ", payload.BaddieHealth)
 
 		zeebeutils.CompleteTask(client, payload, message)
@@ -44,4 +45,8 @@ func chooseAttack(prefix string, subscriptionCh chan *zbc.SubscriptionEvent, cli
 
 func printFormatted(prefix string, msg ...interface{}) {
 	fmt.Println("[",prefix,"\t] ", msg[:])
+}
+
+func calculateAdditionalRange(additionalRange int) int {
+	return rand.Intn(additionalRange)
 }

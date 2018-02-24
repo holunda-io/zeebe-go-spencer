@@ -6,6 +6,7 @@ type GameState struct {
 }
 
 type PlayerSetting struct {
-	NormalAttack 	int
-	SpecialAttack 	int
+	NormalAttack    int
+	SpecialAttack   int
+	AdditionalRange int
 }
