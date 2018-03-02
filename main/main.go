@@ -30,6 +30,7 @@ func play() {
 
 	for {
 		reader.ReadString('\n')
-		StartProcess(CreateNewClient())
+		client := CreateNewClient()
+		StartProcess(client)
 	}
 }

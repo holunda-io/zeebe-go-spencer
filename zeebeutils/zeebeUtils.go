@@ -38,7 +38,6 @@ func CreateNewClient() (Client) {
 	return client
 }
 
-
 func DeployProcess(client Client) {
 	fmt.Printf("Deploy '%s' process '%s'\n", zbc.BpmnXml, processFileBpmn)
 
