@@ -1,45 +1,59 @@
 package heros
 
 import (
-	"github.com/zeebe-io/zbc-go/zbc"
 	"zeebe-go-spencer/zeebeutils"
 	"fmt"
 	"math/rand"
+	"github.com/zeebe-io/zbc-go/zbc"
 )
 
+type handler func(zeebeutils.GameState) zeebeutils.GameState
+
 func InitHero(client zeebeutils.Client, prefix string, setting zeebeutils.PlayerSetting) {
-	go attack(prefix, setting.NormalAttack, setting.AdditionalRange, zeebeutils.CreateSubscription(client, prefix + "-normal"), client)
-	go attack(prefix, setting.SpecialAttack, setting.AdditionalRange, zeebeutils.CreateSubscription(client, prefix + "-special"), client)
-	go chooseAttack(prefix, zeebeutils.CreateSubscription(client, prefix + "-choose"), client)
+	normalSub := zeebeutils.CreateSubscription(client, prefix + "-normal")
+	specialSub := zeebeutils.CreateSubscription(client, prefix + "-special")
+	chooseSub := zeebeutils.CreateSubscription(client, prefix + "-choose")
+
+	for {
+		select {
+		case message := <- normalSub:
+			handle(attack(prefix, setting.NormalAttack, setting.AdditionalRange), client, message)
+		case message := <- specialSub:
+			handle(attack(prefix, setting.SpecialAttack, setting.AdditionalRange), client, message)
+		case message := <- chooseSub:
+			handle(chooseAttack(prefix), client, message)
+		}
+	}
 }
 
-func attack(prefix string, damage, additionalRange int, subscriptionCh chan *zbc.SubscriptionEvent, client zeebeutils.Client) {
-	for{
-		payload, message := zeebeutils.GetTask(subscriptionCh)
+func handle(fn handler, client zeebeutils.Client, message *zbc.SubscriptionEvent) {
+	payload := zeebeutils.ExtractPayload(message)
+	newPayload := fn(payload)
+	zeebeutils.CompleteTask(client, newPayload, message)
+}
 
+
+func attack(prefix string, damage, additionalRange int)  func(zeebeutils.GameState) zeebeutils.GameState {
+	return func(payload zeebeutils.GameState) zeebeutils.GameState {
 		doneDamage := damage + calculateAdditionalRange(additionalRange)
 		printFormatted(prefix, "attack with ", doneDamage, " damage")
 		payload.BaddieHealth = payload.BaddieHealth - doneDamage
 		printFormatted(prefix, "==> New health status: ", payload.BaddieHealth)
-
-		zeebeutils.CompleteTask(client, payload, message)
+		return payload
 	}
 }
 
-func chooseAttack(prefix string, subscriptionCh chan *zbc.SubscriptionEvent, client zeebeutils.Client) {
-	for {
-		payload, message := zeebeutils.GetTask(subscriptionCh)
-
+func chooseAttack(prefix string) func(zeebeutils.GameState) zeebeutils.GameState {
+	return func(payload zeebeutils.GameState) zeebeutils.GameState {
 		switch rand.Intn(2) {
-			case 1:
-				payload.Decision = "special"
-			default:
-				payload.Decision = "normal"
+		case 1:
+			payload.Decision = "special"
+		default:
+			payload.Decision = "normal"
 		}
 
 		printFormatted(prefix, "Choosen attack ", payload.Decision)
-
-		zeebeutils.CompleteTask(client, payload, message)
+		return payload
 	}
 }
 

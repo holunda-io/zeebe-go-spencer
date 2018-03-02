@@ -2,12 +2,9 @@ package main
 
 import (
 	. "zeebe-go-spencer/zeebeutils"
-	"zeebe-go-spencer/heros"
 	"time"
 	"math/rand"
-	"bufio"
-	"os"
-	"fmt"
+	"zeebe-go-spencer/heros"
 )
 
 func main() {
@@ -17,19 +14,15 @@ func main() {
 
 	DeployProcess(client)
 
-	heros.InitHero(client, "t", PlayerSetting{NormalAttack:10, SpecialAttack: 30, AdditionalRange: 5})
-	heros.InitHero(client, "b", PlayerSetting{NormalAttack:10, SpecialAttack: 40, AdditionalRange: 10})
-	heros.InitHero(client, "h7", PlayerSetting{NormalAttack:0, SpecialAttack: 50, AdditionalRange: 20})
+	go heros.InitHero(client, "t", PlayerSetting{NormalAttack:10, SpecialAttack: 30, AdditionalRange: 5})
+	go heros.InitHero(client, "b", PlayerSetting{NormalAttack:10, SpecialAttack: 40, AdditionalRange: 10})
+	go heros.InitHero(client, "h7", PlayerSetting{NormalAttack:0, SpecialAttack: 50, AdditionalRange: 20})
 
 	play()
 }
 
 func play() {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("Press <enter> to start..")
-
 	for {
-		reader.ReadString('\n')
 		client := CreateNewClient()
 		StartProcess(client)
 	}
