@@ -19,16 +19,20 @@
 
 2) Create topic: `zbctl create topic --name default-topic --partitions 1`
 
-3) To run the program: `go run src/main.go`
+3) To run the program: `go run main/main.go`
 This will deploy and start an easy process.
 
-4) Download latest simple monitor: https://github.com/zeebe-io/zeebe-simple-monitor/releases
+4) Use `localhost:8080/fight` to start a process
 
-5) Start Monitor `java -jar zeebe-simple-monitor-0.3.0.jar`
+## Monitoring
 
-6) Check Monitor on: http://127.0.0.1:8080/
+1) Download latest simple monitor: https://github.com/zeebe-io/zeebe-simple-monitor/releases
 
-7) Add Broker with "[DOCKER_IP]:51015" (e.g. 0.0.0.0:51015 on MacOS)
+2) Start Monitor `java -jar zeebe-simple-monitor-0.3.0.jar`
+
+3) Check Monitor on: http://127.0.0.1:8080/
+
+4) Add Broker with "[DOCKER_IP]:51015" (e.g. 0.0.0.0:51015 on MacOS)
 
 More infos: https://docs.zeebe.io/go-client/get-started.html
 

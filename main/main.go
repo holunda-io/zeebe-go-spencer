@@ -2,9 +2,13 @@ package main
 
 import (
 	. "zeebe-go-spencer/zeebeutils"
+	"zeebe-go-spencer/heros"
 	"time"
 	"math/rand"
-	"zeebe-go-spencer/heros"
+	"fmt"
+	"net/http"
+	"log"
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -18,12 +22,34 @@ func main() {
 	go heros.InitHero(client, "b", PlayerSetting{NormalAttack:10, SpecialAttack: 40, AdditionalRange: 10})
 	go heros.InitHero(client, "h7", PlayerSetting{NormalAttack:0, SpecialAttack: 50, AdditionalRange: 20})
 
-	play()
+	startHttpServer()
 }
 
-func play() {
-	for {
-		client := CreateNewClient()
-		StartProcess(client)
+func startHttpServer() {
+
+	router := mux.NewRouter().StrictSlash(true)
+
+	router.HandleFunc("/", index)
+	router.HandleFunc("/fight", fight)
+
+	log.Println("Start http server on 8080")
+	err := http.ListenAndServe(":8080", router)
+	if err != nil {
+		log.Fatal(err)
 	}
+	}
+
+func index(w http.ResponseWriter, r *http.Request) {
+	log.Println("Show index")
+
+	fmt.Fprintln(w, "Zeebe with Go - Fight of Bud Spencer, Terrence Hill and H7-25")
+	fmt.Fprintln(w, "-------------------------------------------------------------")
+	fmt.Fprintln(w, "/fight ... start a fight")
+}
+
+func fight(w http.ResponseWriter, r *http.Request) {
+	log.Println("Start fight")
+
+	StartProcess(CreateNewClient())
+	fmt.Fprint(w, "Started fight")
 }
