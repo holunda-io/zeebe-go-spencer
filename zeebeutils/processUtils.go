@@ -3,11 +3,11 @@ package zeebeutils
 import (
 	"github.com/zeebe-io/zbc-go/zbc"
 	"github.com/vmihailenco/msgpack"
-	"fmt"
+	"log"
 )
 
 func StartProcess(client Client) {
-	fmt.Println("Start process ", processId)
+	log.Println("Start process ",processId)
 
 	payload := new(GameState)
 	payload.BaddieHealth = 100
@@ -20,7 +20,7 @@ func StartProcess(client Client) {
 		panic(err)
 	}
 
-	fmt.Println("Start Process response: ", msg.String())
+	log.Println("Start Process response: ", msg.String())
 }
 
 func ExtractPayload(message *zbc.SubscriptionEvent)  GameState {

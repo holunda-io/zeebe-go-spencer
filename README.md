@@ -17,12 +17,10 @@
 
 1) Start broker with: `docker-compose up`
 
-2) Create topic: `zbctl create topic --name default-topic --partitions 1`
-
-3) To run the program: `go run main/main.go`
+2) To run the program: `go run main/main.go`
 This will deploy and start an easy process.
 
-4) Use `localhost:8080/fight` to start a process
+3) Use `localhost:8080/fight` to start a process
 
 ## Monitoring
 

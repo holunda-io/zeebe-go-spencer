@@ -2,9 +2,9 @@ package heros
 
 import (
 	"zeebe-go-spencer/zeebeutils"
-	"fmt"
 	"math/rand"
 	"github.com/zeebe-io/zbc-go/zbc"
+	"log"
 )
 
 type handler func(zeebeutils.GameState) zeebeutils.GameState
@@ -32,7 +32,6 @@ func handle(fn handler, client zeebeutils.Client, message *zbc.SubscriptionEvent
 	zeebeutils.CompleteTask(client, newPayload, message)
 }
 
-
 func attack(prefix string, damage, additionalRange int)  func(zeebeutils.GameState) zeebeutils.GameState {
 	return func(payload zeebeutils.GameState) zeebeutils.GameState {
 		doneDamage := damage + calculateAdditionalRange(additionalRange)
@@ -58,7 +57,7 @@ func chooseAttack(prefix string) func(zeebeutils.GameState) zeebeutils.GameState
 }
 
 func printFormatted(prefix string, msg ...interface{}) {
-	fmt.Println("[",prefix,"\t] ", msg[:])
+	log.Println("[",prefix,"\t] ", msg[:])
 }
 
 func calculateAdditionalRange(additionalRange int) int {

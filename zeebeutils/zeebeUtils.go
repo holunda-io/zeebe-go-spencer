@@ -4,7 +4,6 @@ import (
 	"github.com/zeebe-io/zbc-go/zbc"
 	"github.com/zeebe-io/zbc-go/zbc/zbmsgpack"
 	"errors"
-	"fmt"
 	"os"
 	"os/signal"
 	"log"
@@ -24,7 +23,7 @@ var errClientStartFailed = errors.New("cannot start client")
 var errWorkflowDeploymentFailed = errors.New("creating new workflow deployment failed")
 
 func CreateNewClient() (Client) {
-	fmt.Println("Create new zeebe client")
+	log.Println("Create new zeebe client")
 
 	var client Client
 
@@ -68,14 +67,14 @@ func topicExists(client Client, topicName string) (bool) {
 }
 
 func DeployProcess(client Client) {
-	fmt.Printf("Deploy '%s' process '%s'\n", zbc.BpmnXml, processFileBpmn)
+	log.Printf("Deploy '%s' process '%s'\n", zbc.BpmnXml, processFileBpmn)
 
 	response, err := client.zbClient.CreateWorkflowFromFile(topicName, zbc.BpmnXml, processFileBpmn)
 	if err != nil {
 		panic(errWorkflowDeploymentFailed)
 	}
 
-	fmt.Println("Deployed Process response state ", response.State)
+	log.Println("Deployed Process response state ", response.State)
 }
 
 func CreateSubscription(client Client, task string) (chan *zbc.SubscriptionEvent) {
@@ -104,10 +103,10 @@ func subscriptionHandler(zbClient *zbc.Client, subscriptionChannel chan *zbmsgpa
 	for {
 		select {
 			case subscription := <- subscriptionChannel:
-				fmt.Println("Adding subscription to handler")
+				log.Println("Adding subscription to handler")
 				subscriptionList = append(subscriptionList, subscription)
 			case <-osCh:
-				fmt.Println("Closing subscriptions")
+				log.Println("Closing subscriptions")
 				for e := range subscriptionList {
 					zbClient.CloseTaskSubscription(subscriptionList[e])
 				}

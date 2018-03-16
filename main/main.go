@@ -39,7 +39,7 @@ func startHttpServer() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	}
+}
 
 func index(w http.ResponseWriter, r *http.Request) {
 	log.Println("Show index")
