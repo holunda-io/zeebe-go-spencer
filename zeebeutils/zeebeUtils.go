@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"log"
 )
 
 const topicName = "default-topic"
@@ -29,6 +30,7 @@ func CreateNewClient() (Client) {
 
 	zbClient, err := zbc.NewClient(BrokerAddr)
 	if err != nil {
+		log.Fatal("Zeebe Broker not running?")
 		panic(errClientStartFailed)
 	}
 
@@ -36,6 +38,33 @@ func CreateNewClient() (Client) {
 	client.subscriptionHandler = createSubscriptionHandler(zbClient)
 
 	return client
+}
+
+func CreateNewTopicIfNotExists(client Client) {
+	log.Printf("Create new topic '%s'", topicName)
+
+	if topicExists(client, topicName) {
+		log.Println("Topic does already exist")
+		return
+	}
+
+	topic, err := client.zbClient.CreateTopic(topicName, 1)
+	if err != nil {
+		log.Fatal("Could not create topic")
+		panic(err)
+	}
+
+	log.Println("Created topic: ", topic)
+}
+
+func topicExists(client Client, topicName string) (bool) {
+	topology, err := client.zbClient.Topology()
+	if err != nil {
+		log.Fatal("Error happens while loading topology")
+		panic(err)
+	}
+
+	return topology.PartitionIDByTopicName[topicName] != nil
 }
 
 func DeployProcess(client Client) {
@@ -46,7 +75,7 @@ func DeployProcess(client Client) {
 		panic(errWorkflowDeploymentFailed)
 	}
 
-	fmt.Println("Deployed Process Response: ", response.String())
+	fmt.Println("Deployed Process response state ", response.State)
 }
 
 func CreateSubscription(client Client, task string) (chan *zbc.SubscriptionEvent) {

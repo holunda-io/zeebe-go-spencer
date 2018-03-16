@@ -16,6 +16,8 @@ func main() {
 
 	client := CreateNewClient()
 
+	CreateNewTopicIfNotExists(client)
+
 	DeployProcess(client)
 
 	go heros.InitHero(client, "t", PlayerSetting{NormalAttack:10, SpecialAttack: 30, AdditionalRange: 5})
