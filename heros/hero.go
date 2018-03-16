@@ -26,17 +26,22 @@ func InitHero(client zeebeutils.Client, prefix string, setting zeebeutils.Player
 	}
 }
 
-func handle(fn handler, client zeebeutils.Client, message *zbc.SubscriptionEvent) {
+func handle(attackHandler handler, client zeebeutils.Client, message *zbc.SubscriptionEvent) {
 	payload := zeebeutils.ExtractPayload(message)
-	newPayload := fn(payload)
+	newPayload := attackHandler(payload)
 	zeebeutils.CompleteTask(client, newPayload, message)
 }
 
 func attack(prefix string, damage, additionalRange int)  func(zeebeutils.GameState) zeebeutils.GameState {
 	return func(payload zeebeutils.GameState) zeebeutils.GameState {
 		doneDamage := damage + calculateAdditionalRange(additionalRange)
-		printFormatted(prefix, "attack with ", doneDamage, " damage")
-		payload.BaddieHealth = payload.BaddieHealth - doneDamage
+		printFormatted(prefix, "Attack with ",doneDamage," damage")
+		result := payload.BaddieHealth - doneDamage
+		if result < 0 {
+			payload.BaddieHealth = 0
+		} else {
+			payload.BaddieHealth = result
+		}
 		printFormatted(prefix, "==> New health status: ", payload.BaddieHealth)
 		return payload
 	}
@@ -51,13 +56,13 @@ func chooseAttack(prefix string) func(zeebeutils.GameState) zeebeutils.GameState
 			payload.Decision = "normal"
 		}
 
-		printFormatted(prefix, "Choosen attack ", payload.Decision)
+		printFormatted(prefix, "Chosen attack: ", payload.Decision)
 		return payload
 	}
 }
 
 func printFormatted(prefix string, msg ...interface{}) {
-	log.Println("[",prefix,"\t] ", msg[:])
+	log.Println("[",prefix,"\t] ",msg)
 }
 
 func calculateAdditionalRange(additionalRange int) int {
