@@ -1,8 +1,8 @@
 package main
 
 import (
-	. "zeebe-go-spencer/zeebeutils"
-	"zeebe-go-spencer/heros"
+	. "github.com/holunda-io/zeebe-go-spencer/zeebeutils"
+	"github.com/holunda-io/zeebe-go-spencer/heros"
 	"time"
 	"math/rand"
 	"fmt"

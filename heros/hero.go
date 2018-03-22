@@ -1,7 +1,7 @@
 package heros
 
 import (
-	"zeebe-go-spencer/zeebeutils"
+	"github.com/holunda-io/zeebe-go-spencer/zeebeutils"
 	"math/rand"
 	"github.com/zeebe-io/zbc-go/zbc"
 	"log"
