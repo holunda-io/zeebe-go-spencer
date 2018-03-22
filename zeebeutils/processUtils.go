@@ -1,13 +1,13 @@
 package zeebeutils
 
 import (
-	"github.com/zeebe-io/zbc-go/zbc"
 	"github.com/vmihailenco/msgpack"
+	"github.com/zeebe-io/zbc-go/zbc"
 	"log"
 )
 
 func StartProcess(client Client) {
-	log.Println("Start process ",processId)
+	log.Println("Start process ", processId)
 
 	payload := new(GameState)
 	payload.BaddieHealth = 100
@@ -23,7 +23,7 @@ func StartProcess(client Client) {
 	log.Println("Start Process response: ", msg.String())
 }
 
-func ExtractPayload(message *zbc.SubscriptionEvent)  GameState {
+func ExtractPayload(message *zbc.SubscriptionEvent) GameState {
 	var payload GameState
 
 	err := msgpack.Unmarshal(message.Task.Payload, &payload)

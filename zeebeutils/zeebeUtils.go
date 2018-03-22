@@ -1,12 +1,12 @@
 package zeebeutils
 
 import (
+	"errors"
 	"github.com/zeebe-io/zbc-go/zbc"
 	"github.com/zeebe-io/zbc-go/zbc/zbmsgpack"
-	"errors"
+	"log"
 	"os"
 	"os/signal"
-	"log"
 )
 
 const topicName = "default-topic"
@@ -22,7 +22,7 @@ type Client struct {
 var errClientStartFailed = errors.New("cannot start client")
 var errWorkflowDeploymentFailed = errors.New("creating new workflow deployment failed")
 
-func CreateNewClient() (Client) {
+func CreateNewClient() Client {
 	log.Println("Create new zeebe client")
 
 	var client Client
@@ -56,7 +56,7 @@ func CreateNewTopicIfNotExists(client Client) {
 	log.Println("Created topic: ", topic)
 }
 
-func topicExists(client Client, topicName string) (bool) {
+func topicExists(client Client, topicName string) bool {
 	topology, err := client.zbClient.Topology()
 	if err != nil {
 		log.Fatal("Error happens while loading topology")
@@ -77,7 +77,7 @@ func DeployProcess(client Client) {
 	log.Println("Deployed Process response state ", response.State)
 }
 
-func CreateSubscription(client Client, task string) (chan *zbc.SubscriptionEvent) {
+func CreateSubscription(client Client, task string) chan *zbc.SubscriptionEvent {
 	subscriptionCh, subscription, _ := client.zbClient.TaskConsumer(topicName, "lockOwner", task)
 
 	registerSubscription(client.subscriptionHandler, subscription)
@@ -88,8 +88,7 @@ func registerSubscription(closeSubscriptionHandler chan *zbmsgpack.TaskSubscript
 	closeSubscriptionHandler <- subscription
 }
 
-
-func createSubscriptionHandler(zbClient *zbc.Client) (chan *zbmsgpack.TaskSubscriptionInfo) {
+func createSubscriptionHandler(zbClient *zbc.Client) chan *zbmsgpack.TaskSubscriptionInfo {
 	subscriptionChannel := make(chan *zbmsgpack.TaskSubscriptionInfo)
 	go subscriptionHandler(zbClient, subscriptionChannel)
 	return subscriptionChannel
@@ -102,15 +101,15 @@ func subscriptionHandler(zbClient *zbc.Client, subscriptionChannel chan *zbmsgpa
 
 	for {
 		select {
-			case subscription := <- subscriptionChannel:
-				log.Println("Adding subscription to handler")
-				subscriptionList = append(subscriptionList, subscription)
-			case <-osCh:
-				log.Println("Closing subscriptions")
-				for e := range subscriptionList {
-					zbClient.CloseTaskSubscription(subscriptionList[e])
-				}
-				os.Exit(0)
+		case subscription := <-subscriptionChannel:
+			log.Println("Adding subscription to handler")
+			subscriptionList = append(subscriptionList, subscription)
+		case <-osCh:
+			log.Println("Closing subscriptions")
+			for e := range subscriptionList {
+				zbClient.CloseTaskSubscription(subscriptionList[e])
+			}
+			os.Exit(0)
 		}
 	}
 }

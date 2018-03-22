@@ -1,14 +1,14 @@
 package main
 
 import (
-	. "github.com/holunda-io/zeebe-go-spencer/zeebeutils"
-	"github.com/holunda-io/zeebe-go-spencer/heros"
-	"time"
-	"math/rand"
 	"fmt"
-	"net/http"
-	"log"
 	"github.com/gorilla/mux"
+	"github.com/holunda-io/zeebe-go-spencer/heros"
+	. "github.com/holunda-io/zeebe-go-spencer/zeebeutils"
+	"log"
+	"math/rand"
+	"net/http"
+	"time"
 )
 
 func main() {
@@ -20,9 +20,9 @@ func main() {
 
 	DeployProcess(client)
 
-	go heros.InitHero(client, "t", PlayerSetting{NormalAttack:10, SpecialAttack: 30, AdditionalRange: 5})
-	go heros.InitHero(client, "b", PlayerSetting{NormalAttack:10, SpecialAttack: 40, AdditionalRange: 10})
-	go heros.InitHero(client, "h7", PlayerSetting{NormalAttack:0, SpecialAttack: 50, AdditionalRange: 20})
+	go heros.InitHero(client, "t", PlayerSetting{NormalAttack: 10, SpecialAttack: 30, AdditionalRange: 5})
+	go heros.InitHero(client, "b", PlayerSetting{NormalAttack: 10, SpecialAttack: 40, AdditionalRange: 10})
+	go heros.InitHero(client, "h7", PlayerSetting{NormalAttack: 0, SpecialAttack: 50, AdditionalRange: 20})
 
 	startHttpServer()
 }
