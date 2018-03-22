@@ -1,0 +1,3 @@
+[broker]
+address = "zeebe"
+port = "51015"

@@ -10,7 +10,7 @@ import (
 )
 
 const topicName = "default-topic"
-const BrokerAddr = "0.0.0.0:51015"
+const BrokerAddr = "zeebe:51015"
 const processFileBpmn = "process/fight.bpmn"
 const processId = "fight"
 
@@ -34,6 +34,7 @@ func CreateNewClient() Client {
 	}
 
 	client.zbClient = zbClient
+	log.Println("Create Zeebe Subscription Handler")
 	client.subscriptionHandler = createSubscriptionHandler(zbClient)
 
 	return client

@@ -5,21 +5,21 @@ services:
     image: camunda/zeebe:latest
     environment:
         - ZEEBE_LOG_LEVEL=debug
-        - ZEEBE_HOST=0.0.0.0
+        - ZEEBE_HOST=zeebe
     ports:
       - "51015:51015"
       - "51016:51016"
       - "51017:51017"
 
   mainapp:
-    image: mainapp:v1
+    image: mainapp
     ports:
       - "8080:8080"
     depends_on:
       - zeebe
 
   hero1:
-    image: heroapp:v1
+    image: heroapp
     environment:
       - HERO=b
     depends_on:
@@ -27,7 +27,7 @@ services:
       - mainapp
 
   hero2:
-    image: heroapp:v1
+    image: heroapp
     environment:
       - HERO=t
     depends_on:
@@ -35,7 +35,7 @@ services:
       - mainapp
 
   hero3:
-    image: heroapp:v1
+    image: heroapp
     environment:
       - HERO=h7
     depends_on:

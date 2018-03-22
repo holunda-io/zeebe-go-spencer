@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	log.Println("##### Starting Mainapp #####")
 	client := CreateNewClient()
 
 	CreateNewTopicIfNotExists(client)
