@@ -4,14 +4,25 @@
 
 1) Install Go
 
-2) Install Zeebe zbctl
+2) Install latest released Zeebe zbctl
 
-    go get github.com/zeebe-io/zbc-go
-    cd $GOPATH/src/github.com/zeebe-io/zbc-go
+    cd $GOPATH
+    
+    mkdir -p github.com/zeebe-io/
+    
+    git clone github.com/zeebe-io/zbc-go
+    
+    git checkout 0.7.0
+    
+    cd zbc-go
+    
     make build
+    
     sudo make install
 
-3) If you are not on MacOS replace 0.0.0.0 in docker-compose.yml and main.go with your docker ip.
+3) Checkout our project to `$GOPATH/src/github.com/holunda-io/zeebe-go-spencer`
+
+4) If you are not on MacOS replace 0.0.0.0 in docker-compose.yml and main.go with your docker ip.
 
 ## Run it
 
