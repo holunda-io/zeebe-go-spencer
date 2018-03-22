@@ -1,0 +1,10 @@
+language: go
+sudo: required
+
+before_install:
+  - mkdir -p $GOPATH/src/github.com/zeebe-io
+  - cd $GOPATH/src/github.com/zeebe-io
+  - git clone github.com/zeebe-io/zbc-go
+  - git checkout 0.7.0
+
+script: go build -v ./...
