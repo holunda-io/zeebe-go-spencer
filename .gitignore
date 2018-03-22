@@ -1,3 +1,6 @@
 # ------------ Idea
 *.iml
 .idea
+
+mainapp/mainapp
+heroapp/heroapp

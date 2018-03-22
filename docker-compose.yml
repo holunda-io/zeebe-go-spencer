@@ -10,3 +10,34 @@ services:
       - "51015:51015"
       - "51016:51016"
       - "51017:51017"
+
+  mainapp:
+    image: mainapp:v1
+    ports:
+      - "8080:8080"
+    depends_on:
+      - zeebe
+
+  hero1:
+    image: heroapp:v1
+    environment:
+      - HERO=b
+    depends_on:
+      - zeebe
+      - mainapp
+
+  hero2:
+    image: heroapp:v1
+    environment:
+      - HERO=t
+    depends_on:
+      - zeebe
+      - mainapp
+
+  hero3:
+    image: heroapp:v1
+    environment:
+      - HERO=h7
+    depends_on:
+      - zeebe
+      - mainapp
