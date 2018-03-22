@@ -1,3 +1,6 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/holunda-io/zeebe-go-spencer)](https://goreportcard.com/report/github.com/holunda-io/zeebe-go-spencer)
+[![Build Status](https://travis-ci.org/holunda-io/zeebe-go-spencer.svg?branch=master)](https://travis-ci.org/holunda-io/zeebe-go-spencer)
+
 # Zeebe with Go - Fight of Bud Spencer, Terrence Hill and H7-25
 
 ## Setup
