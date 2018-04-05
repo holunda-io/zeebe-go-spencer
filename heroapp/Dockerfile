@@ -2,8 +2,10 @@ FROM golang:1.8
 
 WORKDIR /app
 
-ADD heroapp /app
+ADD waitForZeebe.sh /app
+ADD zbctl /app
+ADD heroapp/heroapp /app
 
 EXPOSE 8080
 
-ENTRYPOINT ["./heroapp"]
+ENTRYPOINT ["./waitForZeebe.sh", "heroapp"]

@@ -10,5 +10,7 @@ for ((i=1; $i<5; i++)); do
     sleep 1
 done
 
-echo "Zeebe is ready (or wait time expired), starting mainapp..."
-./mainapp
+APPNAME=$1
+
+echo "Zeebe is ready (or wait time expired), starting $APPNAME..."
+./$APPNAME
