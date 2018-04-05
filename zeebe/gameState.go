@@ -1,4 +1,4 @@
-package zeebeutils
+package zeebe
 
 type GameState struct {
 	BaddieHealth int    `msgpack:"health"`
@@ -9,4 +9,10 @@ type PlayerSetting struct {
 	NormalAttack    int
 	SpecialAttack   int
 	AdditionalRange int
+}
+
+func newGame() *GameState {
+	gameState := new(GameState)
+	gameState.BaddieHealth = 100
+	return gameState
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	. "github.com/holunda-io/zeebe-go-spencer/zeebeutils"
+	. "github.com/holunda-io/zeebe-go-spencer/zeebe"
 	"github.com/zeebe-io/zbc-go/zbc"
 	"log"
 	"math/rand"
@@ -10,26 +10,25 @@ import (
 	"github.com/holunda-io/zeebe-go-spencer/common"
 )
 
+var settings = map[string]PlayerSetting{
+"t":  {NormalAttack: 10, SpecialAttack: 30, AdditionalRange: 5},
+"b":  {NormalAttack: 10, SpecialAttack: 40, AdditionalRange: 10},
+"h7": {NormalAttack: 0, SpecialAttack: 50, AdditionalRange: 20},
+}
+
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	zeebeHost := common.GetZeebeHost()
 	client := NewClientWithDefaultTopic(zeebeHost)
 
-	settings := map[string]PlayerSetting{
-		"t":  {NormalAttack: 10, SpecialAttack: 30, AdditionalRange: 5},
-		"b":  {NormalAttack: 10, SpecialAttack: 40, AdditionalRange: 10},
-		"h7": {NormalAttack: 0, SpecialAttack: 50, AdditionalRange: 20},
-	}
-
 	hero := os.Getenv("HERO")
-
-	InitHero(client, hero, settings[hero])
+	initHero(client, hero, settings[hero])
 }
 
 type handler func(GameState) GameState
 
-func InitHero(client Client, prefix string, setting PlayerSetting) {
+func initHero(client Client, prefix string, setting PlayerSetting) {
 	normalSub := client.CreateSubscription(prefix+"-normal")
 	specialSub := client.CreateSubscription(prefix+"-special")
 	chooseSub := client.CreateSubscription(prefix+"-choose")

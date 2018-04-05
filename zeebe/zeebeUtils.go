@@ -1,4 +1,4 @@
-package zeebeutils
+package zeebe
 
 import (
 	"errors"

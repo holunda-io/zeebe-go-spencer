@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	. "github.com/holunda-io/zeebe-go-spencer/zeebeutils"
+	. "github.com/holunda-io/zeebe-go-spencer/zeebe"
 	"log"
 	"net/http"
 	"github.com/holunda-io/zeebe-go-spencer/common"

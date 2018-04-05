@@ -1,4 +1,4 @@
-package zeebeutils
+package zeebe
 
 import (
 	"github.com/vmihailenco/msgpack"
@@ -19,8 +19,7 @@ func (client Client) DeployProcess(processFile string) {
 func (client Client) StartProcess() {
 	log.Println("Start process ", processId)
 
-	payload := new(GameState)
-	payload.BaddieHealth = 100
+	payload := newGame()
 
 	instance := zbc.NewWorkflowInstance(processId, -1, make(map[string]interface{}))
 	instance.Payload, _ = msgpack.Marshal(payload)
