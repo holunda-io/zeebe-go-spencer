@@ -41,3 +41,10 @@ services:
     depends_on:
       - zeebe
       - mainapp
+
+  monitor:
+    image: camunda/zeebe-simple-monitor
+    depends_on:
+      - zeebe
+    ports:
+      - "9080:8080"
