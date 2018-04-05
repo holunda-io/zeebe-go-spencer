@@ -6,7 +6,17 @@ import (
 	"log"
 )
 
-func StartProcess(client Client) {
+func (client Client) DeployProcess(processFile string) {
+	log.Printf("Deploy '%s' process '%s'\n", zbc.BpmnXml, processFile)
+
+	response, err := client.zbClient.CreateWorkflowFromFile(client.topicName, zbc.BpmnXml, processFile)
+	if err != nil {
+		panic(errWorkflowDeploymentFailed)
+	}
+	log.Println("Deployed Process response state ", response.State)
+}
+
+func (client Client) StartProcess() {
 	log.Println("Start process ", processId)
 
 	payload := new(GameState)
@@ -14,7 +24,7 @@ func StartProcess(client Client) {
 
 	instance := zbc.NewWorkflowInstance(processId, -1, make(map[string]interface{}))
 	instance.Payload, _ = msgpack.Marshal(payload)
-	msg, err := client.zbClient.CreateWorkflowInstance(topicName, instance)
+	msg, err := client.zbClient.CreateWorkflowInstance(client.topicName, instance)
 
 	if err != nil {
 		panic(err)
@@ -34,7 +44,7 @@ func ExtractPayload(message *zbc.SubscriptionEvent) GameState {
 	return payload
 }
 
-func CompleteTask(client Client, state GameState, message *zbc.SubscriptionEvent) {
+func (client Client) CompleteTask(state GameState, message *zbc.SubscriptionEvent) {
 	p, _ := msgpack.Marshal(state)
 	message.Task.Payload = p
 

@@ -6,15 +6,19 @@ import (
 	. "github.com/holunda-io/zeebe-go-spencer/zeebeutils"
 	"log"
 	"net/http"
+	"github.com/holunda-io/zeebe-go-spencer/common"
 )
+
+var client Client
 
 func main() {
 	log.Println("##### Starting Mainapp #####")
-	client := CreateNewClient()
 
-	CreateNewTopicIfNotExists(client)
+	zeebeHost := common.GetZeebeHost()
 
-	DeployProcess(client)
+	client = NewClientWithDefaultTopic(zeebeHost)
+	client.CreateTopicIfNotExists()
+	client.DeployProcess("process/fight.bpmn")
 
 	startHttpServer()
 }
@@ -44,6 +48,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 func fight(w http.ResponseWriter, r *http.Request) {
 	log.Println("Start fight")
 
-	StartProcess(CreateNewClient())
+	client := NewClientWithDefaultTopic(common.GetZeebeHost())
+	client.StartProcess()
 	fmt.Fprint(w, "Started fight")
 }

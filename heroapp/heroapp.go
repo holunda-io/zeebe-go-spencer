@@ -2,17 +2,19 @@ package main
 
 import (
 	. "github.com/holunda-io/zeebe-go-spencer/zeebeutils"
-	"math/rand"
-	"time"
 	"github.com/zeebe-io/zbc-go/zbc"
 	"log"
+	"math/rand"
 	"os"
+	"time"
+	"github.com/holunda-io/zeebe-go-spencer/common"
 )
 
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	client := CreateNewClient()
+	zeebeHost := common.GetZeebeHost()
+	client := NewClientWithDefaultTopic(zeebeHost)
 
 	settings := map[string]PlayerSetting{
 		"t":  {NormalAttack: 10, SpecialAttack: 30, AdditionalRange: 5},
@@ -28,9 +30,9 @@ func main() {
 type handler func(GameState) GameState
 
 func InitHero(client Client, prefix string, setting PlayerSetting) {
-	normalSub := CreateSubscription(client, prefix+"-normal")
-	specialSub := CreateSubscription(client, prefix+"-special")
-	chooseSub := CreateSubscription(client, prefix+"-choose")
+	normalSub := client.CreateSubscription(prefix+"-normal")
+	specialSub := client.CreateSubscription(prefix+"-special")
+	chooseSub := client.CreateSubscription(prefix+"-choose")
 
 	for {
 		select {
@@ -47,7 +49,7 @@ func InitHero(client Client, prefix string, setting PlayerSetting) {
 func handle(attackHandler handler, client Client, message *zbc.SubscriptionEvent) {
 	payload := ExtractPayload(message)
 	newPayload := attackHandler(payload)
-	CompleteTask(client, newPayload, message)
+	client.CompleteTask(newPayload, message)
 }
 
 func attack(prefix string, damage, additionalRange int) func(GameState) GameState {

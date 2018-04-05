@@ -9,25 +9,25 @@ import (
 	"os/signal"
 )
 
-const topicName = "default-topic"
-const BrokerAddr = "zeebe:51015"
-const processFileBpmn = "process/fight.bpmn"
+const defaultTopicName = "default-topic"
+const brokerPort = "51015"
 const processId = "fight"
 
 type Client struct {
 	zbClient            *zbc.Client
 	subscriptionHandler chan *zbmsgpack.TaskSubscriptionInfo
+	topicName			string
 }
 
 var errClientStartFailed = errors.New("cannot start client")
 var errWorkflowDeploymentFailed = errors.New("creating new workflow deployment failed")
 
-func CreateNewClient() Client {
+func NewClientWithDefaultTopic(brokerAddr string) Client {
 	log.Println("Create new zeebe client")
 
 	var client Client
 
-	zbClient, err := zbc.NewClient(BrokerAddr)
+	zbClient, err := zbc.NewClient(brokerAddr + ":" + brokerPort)
 	if err != nil {
 		log.Fatal("Zeebe Broker not running?")
 		panic(errClientStartFailed)
@@ -36,19 +36,20 @@ func CreateNewClient() Client {
 	client.zbClient = zbClient
 	log.Println("Create Zeebe Subscription Handler")
 	client.subscriptionHandler = createSubscriptionHandler(zbClient)
+	client.topicName = defaultTopicName
 
 	return client
 }
 
-func CreateNewTopicIfNotExists(client Client) {
-	log.Printf("Create new topic '%s'", topicName)
+func (client Client) CreateTopicIfNotExists() {
+	log.Printf("Create new topic '%s'", client.topicName)
 
-	if topicExists(client, topicName) {
+	if topicExists(client, client.topicName) {
 		log.Println("Topic does already exist")
 		return
 	}
 
-	topic, err := client.zbClient.CreateTopic(topicName, 1)
+	topic, err := client.zbClient.CreateTopic(client.topicName, 1)
 	if err != nil {
 		log.Fatal("Could not create topic")
 		panic(err)
@@ -67,26 +68,11 @@ func topicExists(client Client, topicName string) bool {
 	return topology.PartitionIDByTopicName[topicName] != nil
 }
 
-func DeployProcess(client Client) {
-	log.Printf("Deploy '%s' process '%s'\n", zbc.BpmnXml, processFileBpmn)
+func (client Client) CreateSubscription(task string) chan *zbc.SubscriptionEvent {
+	subscriptionCh, subscription, _ := client.zbClient.TaskConsumer(client.topicName, "lockOwner", task)
 
-	response, err := client.zbClient.CreateWorkflowFromFile(topicName, zbc.BpmnXml, processFileBpmn)
-	if err != nil {
-		panic(errWorkflowDeploymentFailed)
-	}
-
-	log.Println("Deployed Process response state ", response.State)
-}
-
-func CreateSubscription(client Client, task string) chan *zbc.SubscriptionEvent {
-	subscriptionCh, subscription, _ := client.zbClient.TaskConsumer(topicName, "lockOwner", task)
-
-	registerSubscription(client.subscriptionHandler, subscription)
+	client.subscriptionHandler <- subscription
 	return subscriptionCh
-}
-
-func registerSubscription(closeSubscriptionHandler chan *zbmsgpack.TaskSubscriptionInfo, subscription *zbmsgpack.TaskSubscriptionInfo) {
-	closeSubscriptionHandler <- subscription
 }
 
 func createSubscriptionHandler(zbClient *zbc.Client) chan *zbmsgpack.TaskSubscriptionInfo {
