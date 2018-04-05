@@ -11,26 +11,24 @@
 
 3) Run `setupZbctl.sh` to install latest released Zeebe zbctl
 
-4) If you are not on MacOS replace 0.0.0.0 in docker-compose.yml and main.go with your docker ip.
-
 ## Run it
 
-1) Start broker with: `docker-compose up`
+1) Build the main-app with: `./createContainer.sh mainapp`
 
-2) To run the program: `go run main/main.go`
-This will deploy and start an easy process.
+2) Build the hero-app with: `./createContainer.sh heroapp`
 
-3) Use `localhost:8080/fight` to start a process
+3) Start everything with: `docker-compose up`
+
+3) Use `[DOCKER_IP]:8080/fight` to start a process
 
 ## Monitoring
 
-1) Download latest simple monitor: https://github.com/zeebe-io/zeebe-simple-monitor/releases
+1) In docker-compose there is a zeebe-simple-monitor running
+   in a dedicated container and should automatically have been started.
 
-2) Start Monitor `java -jar zeebe-simple-monitor-0.3.0.jar`
+2) Check Monitor on: http://[DOCKER_IP]:9080/
 
-3) Check Monitor on: http://127.0.0.1:8080/
-
-4) Add Broker with "[DOCKER_IP]:51015" (e.g. 0.0.0.0:51015 on MacOS)
+3) Add Broker with "zeebe:51015"
 
 More infos: https://docs.zeebe.io/go-client/get-started.html
 
