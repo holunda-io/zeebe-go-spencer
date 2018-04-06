@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/holunda-io/zeebe-go-spencer/heros"
 	. "github.com/holunda-io/zeebe-go-spencer/zeebeutils"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
+	"github.com/holunda-io/zeebe-go-spencer/heros"
 )
 
 func main() {

@@ -2,34 +2,31 @@ package heros
 
 import (
 	"github.com/holunda-io/zeebe-go-spencer/zeebeutils"
-	"github.com/zeebe-io/zbc-go/zbc"
 	"log"
 	"math/rand"
+	"github.com/zeebe-io/zbc-go/zbc/models/zbsubscriptions"
+	"github.com/zeebe-io/zbc-go/zbc/services/zbsubscribe"
 )
 
 type handler func(zeebeutils.GameState) zeebeutils.GameState
 
 func InitHero(client zeebeutils.Client, prefix string, setting zeebeutils.PlayerSetting) {
-	normalSub := zeebeutils.CreateSubscription(client, prefix+"-normal")
-	specialSub := zeebeutils.CreateSubscription(client, prefix+"-special")
-	chooseSub := zeebeutils.CreateSubscription(client, prefix+"-choose")
+	go zeebeutils.CreateAndRegisterSubscription(client, prefix+"-normal",
+		handle(attack(prefix, setting.NormalAttack, setting.AdditionalRange)))
 
-	for {
-		select {
-		case message := <-normalSub:
-			handle(attack(prefix, setting.NormalAttack, setting.AdditionalRange), client, message)
-		case message := <-specialSub:
-			handle(attack(prefix, setting.SpecialAttack, setting.AdditionalRange), client, message)
-		case message := <-chooseSub:
-			handle(chooseAttack(prefix), client, message)
-		}
-	}
+	go zeebeutils.CreateAndRegisterSubscription(client, prefix+"-special",
+		handle(attack(prefix, setting.SpecialAttack, setting.AdditionalRange)))
+
+	go zeebeutils.CreateAndRegisterSubscription(client, prefix+"-choose",
+		handle(chooseAttack(prefix)))
 }
 
-func handle(attackHandler handler, client zeebeutils.Client, message *zbc.SubscriptionEvent) {
-	payload := zeebeutils.ExtractPayload(message)
-	newPayload := attackHandler(payload)
-	zeebeutils.CompleteTask(client, newPayload, message)
+func handle(attackHandler handler) zbsubscribe.TaskSubscriptionCallback {
+	return func(clientApi zbsubscribe.ZeebeAPI, event *zbsubscriptions.SubscriptionEvent) {
+		payload := zeebeutils.ExtractPayload(event)
+		newPayload := attackHandler(payload)
+		zeebeutils.CompleteTask(clientApi, newPayload, event)
+	}
 }
 
 func attack(prefix string, damage, additionalRange int) func(zeebeutils.GameState) zeebeutils.GameState {

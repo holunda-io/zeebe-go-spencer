@@ -3,10 +3,11 @@ package zeebeutils
 import (
 	"errors"
 	"github.com/zeebe-io/zbc-go/zbc"
-	"github.com/zeebe-io/zbc-go/zbc/zbmsgpack"
 	"log"
 	"os"
 	"os/signal"
+	"github.com/zeebe-io/zbc-go/zbc/common"
+	"github.com/zeebe-io/zbc-go/zbc/services/zbsubscribe"
 )
 
 const topicName = "default-topic"
@@ -16,7 +17,7 @@ const processId = "fight"
 
 type Client struct {
 	zbClient            *zbc.Client
-	subscriptionHandler chan *zbmsgpack.TaskSubscriptionInfo
+	subscriptionHandler chan *zbsubscribe.TaskSubscription
 }
 
 var errClientStartFailed = errors.New("cannot start client")
@@ -34,7 +35,7 @@ func CreateNewClient() Client {
 	}
 
 	client.zbClient = zbClient
-	client.subscriptionHandler = createSubscriptionHandler(zbClient)
+	client.subscriptionHandler = createSubscriptionHandler()
 
 	return client
 }
@@ -57,7 +58,7 @@ func CreateNewTopicIfNotExists(client Client) {
 }
 
 func topicExists(client Client, topicName string) bool {
-	topology, err := client.zbClient.Topology()
+	topology, err := client.zbClient.RefreshTopology()
 	if err != nil {
 		log.Fatal("Error happens while loading topology")
 		panic(err)
@@ -67,9 +68,9 @@ func topicExists(client Client, topicName string) bool {
 }
 
 func DeployProcess(client Client) {
-	log.Printf("Deploy '%s' process '%s'\n", zbc.BpmnXml, processFileBpmn)
+	log.Printf("Deploy '%s' process '%s'\n", zbcommon.BpmnXml, processFileBpmn)
 
-	response, err := client.zbClient.CreateWorkflowFromFile(topicName, zbc.BpmnXml, processFileBpmn)
+	response, err := client.zbClient.CreateWorkflowFromFile(topicName, zbcommon.BpmnXml, processFileBpmn)
 	if err != nil {
 		panic(errWorkflowDeploymentFailed)
 	}
@@ -77,27 +78,32 @@ func DeployProcess(client Client) {
 	log.Println("Deployed Process response state ", response.State)
 }
 
-func CreateSubscription(client Client, task string) chan *zbc.SubscriptionEvent {
-	subscriptionCh, subscription, _ := client.zbClient.TaskConsumer(topicName, "lockOwner", task)
+func CreateAndRegisterSubscription(client Client, task string, cb zbsubscribe.TaskSubscriptionCallback)  {
+	subscription, err := client.zbClient.TaskSubscription(topicName, "lockOwner", task, 32, cb)
+
+	if err != nil {
+		panic("Unable to open subscription")
+	}
 
 	registerSubscription(client.subscriptionHandler, subscription)
-	return subscriptionCh
+
+	subscription.Start()
 }
 
-func registerSubscription(closeSubscriptionHandler chan *zbmsgpack.TaskSubscriptionInfo, subscription *zbmsgpack.TaskSubscriptionInfo) {
+func registerSubscription(closeSubscriptionHandler chan *zbsubscribe.TaskSubscription, subscription *zbsubscribe.TaskSubscription) {
 	closeSubscriptionHandler <- subscription
 }
 
-func createSubscriptionHandler(zbClient *zbc.Client) chan *zbmsgpack.TaskSubscriptionInfo {
-	subscriptionChannel := make(chan *zbmsgpack.TaskSubscriptionInfo)
-	go subscriptionHandler(zbClient, subscriptionChannel)
+func createSubscriptionHandler() chan *zbsubscribe.TaskSubscription {
+	subscriptionChannel := make(chan *zbsubscribe.TaskSubscription)
+	go subscriptionHandler(subscriptionChannel)
 	return subscriptionChannel
 }
 
-func subscriptionHandler(zbClient *zbc.Client, subscriptionChannel chan *zbmsgpack.TaskSubscriptionInfo) {
+func subscriptionHandler(subscriptionChannel chan *zbsubscribe.TaskSubscription) {
 	osCh := make(chan os.Signal, 1)
 	signal.Notify(osCh, os.Interrupt)
-	var subscriptionList []*zbmsgpack.TaskSubscriptionInfo
+	var subscriptionList []*zbsubscribe.TaskSubscription
 
 	for {
 		select {
@@ -107,7 +113,7 @@ func subscriptionHandler(zbClient *zbc.Client, subscriptionChannel chan *zbmsgpa
 		case <-osCh:
 			log.Println("Closing subscriptions")
 			for e := range subscriptionList {
-				zbClient.CloseTaskSubscription(subscriptionList[e])
+				subscriptionList[e].Close()
 			}
 			os.Exit(0)
 		}

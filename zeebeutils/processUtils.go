@@ -4,6 +4,8 @@ import (
 	"github.com/vmihailenco/msgpack"
 	"github.com/zeebe-io/zbc-go/zbc"
 	"log"
+	"github.com/zeebe-io/zbc-go/zbc/models/zbsubscriptions"
+	"github.com/zeebe-io/zbc-go/zbc/services/zbsubscribe"
 )
 
 func StartProcess(client Client) {
@@ -23,10 +25,10 @@ func StartProcess(client Client) {
 	log.Println("Start Process response: ", msg.String())
 }
 
-func ExtractPayload(message *zbc.SubscriptionEvent) GameState {
+func ExtractPayload(event *zbsubscriptions.SubscriptionEvent) GameState {
 	var payload GameState
 
-	err := msgpack.Unmarshal(message.Task.Payload, &payload)
+	err := msgpack.Unmarshal(event.Task.Payload, &payload)
 	if err != nil {
 		panic(err)
 	}
@@ -34,9 +36,9 @@ func ExtractPayload(message *zbc.SubscriptionEvent) GameState {
 	return payload
 }
 
-func CompleteTask(client Client, state GameState, message *zbc.SubscriptionEvent) {
+func CompleteTask(client zbsubscribe.ZeebeAPI, state GameState, event *zbsubscriptions.SubscriptionEvent) {
 	p, _ := msgpack.Marshal(state)
-	message.Task.Payload = p
+	event.Task.Payload = p
 
-	client.zbClient.CompleteTask(message)
+	client.CompleteTask(event)
 }
