@@ -1,6 +1,6 @@
-package zeebe
+package game
 
-type GameState struct {
+type State struct {
 	BaddieHealth int    `msgpack:"health"`
 	Decision     string `msgpack:"attack"`
 }
@@ -11,8 +11,8 @@ type PlayerSetting struct {
 	AdditionalRange int
 }
 
-func newGame() *GameState {
-	gameState := new(GameState)
+func NewGame() *State {
+	gameState := new(State)
 	gameState.BaddieHealth = 100
 	return gameState
 }

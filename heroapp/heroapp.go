@@ -8,9 +8,10 @@ import (
 	"github.com/holunda-io/zeebe-go-spencer/common"
 	"github.com/zeebe-io/zbc-go/zbc/models/zbsubscriptions"
 	"github.com/zeebe-io/zbc-go/zbc/services/zbsubscribe"
+	"github.com/holunda-io/zeebe-go-spencer/game"
 )
 
-var settings = map[string]PlayerSetting{
+var settings = map[string]game.PlayerSetting{
 "t":  {NormalAttack: 10, SpecialAttack: 30, AdditionalRange: 5},
 "b":  {NormalAttack: 10, SpecialAttack: 40, AdditionalRange: 10},
 "h7": {NormalAttack: 0, SpecialAttack: 50, AdditionalRange: 20},
@@ -25,9 +26,9 @@ func main() {
 	initHero(client, hero, settings[hero])
 }
 
-type handler func(GameState) GameState
+type handler func(game.State) game.State
 
-func initHero(client Client, prefix string, setting PlayerSetting) {
+func initHero(client Client, prefix string, setting game.PlayerSetting) {
 	go client.CreateAndRegisterSubscription(prefix+"-normal", handle(attack(prefix, setting.NormalAttack, setting.AdditionalRange)))
 	go client.CreateAndRegisterSubscription(prefix+"-special", handle(attack(prefix, setting.SpecialAttack, setting.AdditionalRange)))
 	go client.CreateAndRegisterSubscription(prefix+"-choose", handle(chooseAttack(prefix)))
@@ -42,8 +43,8 @@ func handle(attackHandler handler) zbsubscribe.TaskSubscriptionCallback {
 	}
 }
 
-func attack(prefix string, damage, additionalRange int) func(GameState) GameState {
-	return func(payload GameState) GameState {
+func attack(prefix string, damage, additionalRange int) func(game.State) game.State {
+	return func(payload game.State) game.State {
 		doneDamage := damage + calculateAdditionalRange(additionalRange)
 		printFormatted(prefix, "Attack with ", doneDamage, " damage")
 		result := payload.BaddieHealth - doneDamage
@@ -57,8 +58,8 @@ func attack(prefix string, damage, additionalRange int) func(GameState) GameStat
 	}
 }
 
-func chooseAttack(prefix string) func(GameState) GameState {
-	return func(payload GameState) GameState {
+func chooseAttack(prefix string) func(game.State) game.State {
+	return func(payload game.State) game.State {
 		switch rand.Intn(2) {
 		case 1:
 			payload.Decision = "special"

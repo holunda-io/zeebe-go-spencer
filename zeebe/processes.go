@@ -7,6 +7,7 @@ import (
 	"github.com/zeebe-io/zbc-go/zbc/models/zbsubscriptions"
 	"github.com/zeebe-io/zbc-go/zbc/services/zbsubscribe"
 	"github.com/zeebe-io/zbc-go/zbc/common"
+	"github.com/holunda-io/zeebe-go-spencer/game"
 )
 
 func (client Client) DeployProcess(processFile string) {
@@ -22,7 +23,7 @@ func (client Client) DeployProcess(processFile string) {
 func (client Client) StartProcess() {
 	log.Println("Start process ", processId)
 
-	payload := newGame()
+	payload := game.NewGame()
 
 	instance := zbc.NewWorkflowInstance(processId, -1, make(map[string]interface{}))
 	instance.Payload, _ = msgpack.Marshal(payload)
@@ -35,8 +36,8 @@ func (client Client) StartProcess() {
 	log.Println("Start Process response: ", msg.String())
 }
 
-func ExtractPayload(event *zbsubscriptions.SubscriptionEvent) GameState {
-	var payload GameState
+func ExtractPayload(event *zbsubscriptions.SubscriptionEvent) game.State {
+	var payload game.State
 
 	err := msgpack.Unmarshal(event.Task.Payload, &payload)
 	if err != nil {
@@ -46,7 +47,7 @@ func ExtractPayload(event *zbsubscriptions.SubscriptionEvent) GameState {
 	return payload
 }
 
-func CompleteTask(clientApi zbsubscribe.ZeebeAPI, state GameState, event *zbsubscriptions.SubscriptionEvent) {
+func CompleteTask(clientApi zbsubscribe.ZeebeAPI, state game.State, event *zbsubscriptions.SubscriptionEvent) {
 	p, _ := msgpack.Marshal(state)
 	event.Task.Payload = p
 
