@@ -7,9 +7,13 @@
 
 1) Install Go => See [Go Setup Doc](https://golang.org/doc/install), don't forget GOPATH!
 
-2) Checkout our project to `$GOPATH/src/github.com/holunda-io/zeebe-go-spencer`
+2) Install Zeebe zbctl => Use latest release from https://github.com/zeebe-io/zbctl/releases
 
+<<<<<<< HEAD
 3) Run `setupZbctl.sh` to install latest released Zeebe zbctl
+=======
+3) If you are not on MacOS replace 0.0.0.0 in docker-compose.yml and main.go with your docker ip.
+>>>>>>> master
 
 ## Run it
 

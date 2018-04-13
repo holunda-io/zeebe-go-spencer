@@ -2,12 +2,12 @@ package main
 
 import (
 	. "github.com/holunda-io/zeebe-go-spencer/zeebe"
-	"github.com/zeebe-io/zbc-go/zbc"
 	"log"
 	"math/rand"
 	"os"
-	"time"
 	"github.com/holunda-io/zeebe-go-spencer/common"
+	"github.com/zeebe-io/zbc-go/zbc/models/zbsubscriptions"
+	"github.com/zeebe-io/zbc-go/zbc/services/zbsubscribe"
 )
 
 var settings = map[string]PlayerSetting{
@@ -17,7 +17,6 @@ var settings = map[string]PlayerSetting{
 }
 
 func main() {
-	rand.Seed(time.Now().UTC().UnixNano())
 
 	zeebeHost := common.GetZeebeHost()
 	client := NewClientWithDefaultTopic(zeebeHost)
@@ -29,26 +28,18 @@ func main() {
 type handler func(GameState) GameState
 
 func initHero(client Client, prefix string, setting PlayerSetting) {
-	normalSub := client.CreateSubscription(prefix+"-normal")
-	specialSub := client.CreateSubscription(prefix+"-special")
-	chooseSub := client.CreateSubscription(prefix+"-choose")
-
-	for {
-		select {
-		case message := <-normalSub:
-			handle(attack(prefix, setting.NormalAttack, setting.AdditionalRange), client, message)
-		case message := <-specialSub:
-			handle(attack(prefix, setting.SpecialAttack, setting.AdditionalRange), client, message)
-		case message := <-chooseSub:
-			handle(chooseAttack(prefix), client, message)
-		}
-	}
+	go client.CreateAndRegisterSubscription(prefix+"-normal", handle(attack(prefix, setting.NormalAttack, setting.AdditionalRange)))
+	go client.CreateAndRegisterSubscription(prefix+"-special", handle(attack(prefix, setting.SpecialAttack, setting.AdditionalRange)))
+	go client.CreateAndRegisterSubscription(prefix+"-choose", handle(chooseAttack(prefix)))
 }
 
-func handle(attackHandler handler, client Client, message *zbc.SubscriptionEvent) {
-	payload := ExtractPayload(message)
-	newPayload := attackHandler(payload)
-	client.CompleteTask(newPayload, message)
+func handle(attackHandler handler) zbsubscribe.TaskSubscriptionCallback {
+	return func(clientApi zbsubscribe.ZeebeAPI, event *zbsubscriptions.SubscriptionEvent) {
+		log.Printf("Incoming event: %s", event)
+		payload := ExtractPayload(event)
+		newPayload := attackHandler(payload)
+		CompleteTask(clientApi, newPayload, event)
+	}
 }
 
 func attack(prefix string, damage, additionalRange int) func(GameState) GameState {

@@ -3,10 +3,10 @@ package zeebe
 import (
 	"errors"
 	"github.com/zeebe-io/zbc-go/zbc"
-	"github.com/zeebe-io/zbc-go/zbc/zbmsgpack"
 	"log"
 	"os"
 	"os/signal"
+	"github.com/zeebe-io/zbc-go/zbc/services/zbsubscribe"
 )
 
 const defaultTopicName = "default-topic"
@@ -15,7 +15,7 @@ const processId = "fight"
 
 type Client struct {
 	zbClient            *zbc.Client
-	subscriptionHandler chan *zbmsgpack.TaskSubscriptionInfo
+	subscriptionHandler chan *zbsubscribe.TaskSubscription
 	topicName			string
 }
 
@@ -35,7 +35,7 @@ func NewClientWithDefaultTopic(brokerAddr string) Client {
 
 	client.zbClient = zbClient
 	log.Println("Create Zeebe Subscription Handler")
-	client.subscriptionHandler = createSubscriptionHandler(zbClient)
+	client.subscriptionHandler = createSubscriptionHandler()
 	client.topicName = defaultTopicName
 
 	return client
@@ -59,7 +59,7 @@ func (client Client) CreateTopicIfNotExists() {
 }
 
 func topicExists(client Client, topicName string) bool {
-	topology, err := client.zbClient.Topology()
+	topology, err := client.zbClient.RefreshTopology()
 	if err != nil {
 		log.Fatal("Error happens while loading topology")
 		panic(err)
@@ -68,23 +68,30 @@ func topicExists(client Client, topicName string) bool {
 	return topology.PartitionIDByTopicName[topicName] != nil
 }
 
-func (client Client) CreateSubscription(task string) chan *zbc.SubscriptionEvent {
-	subscriptionCh, subscription, _ := client.zbClient.TaskConsumer(client.topicName, "lockOwner", task)
-
-	client.subscriptionHandler <- subscription
-	return subscriptionCh
+func (client Client) CreateAndRegisterSubscription(task string, cb zbsubscribe.TaskSubscriptionCallback) {
+	subscription, err := client.zbClient.TaskSubscription(client.topicName, "lockOwner", task, 32, cb)
+	if err != nil {
+		panic("Unable to open subscription")
+	}
+	log.Printf("Creating subscribtion to task %s", task)
+	registerSubscription(client.subscriptionHandler, subscription)
+	subscription.Start()
 }
 
-func createSubscriptionHandler(zbClient *zbc.Client) chan *zbmsgpack.TaskSubscriptionInfo {
-	subscriptionChannel := make(chan *zbmsgpack.TaskSubscriptionInfo)
-	go subscriptionHandler(zbClient, subscriptionChannel)
+func registerSubscription(closeSubscriptionHandler chan *zbsubscribe.TaskSubscription, subscription *zbsubscribe.TaskSubscription) {
+	closeSubscriptionHandler <- subscription
+}
+
+func createSubscriptionHandler() chan *zbsubscribe.TaskSubscription {
+	subscriptionChannel := make(chan *zbsubscribe.TaskSubscription)
+	go subscriptionHandler(subscriptionChannel)
 	return subscriptionChannel
 }
 
-func subscriptionHandler(zbClient *zbc.Client, subscriptionChannel chan *zbmsgpack.TaskSubscriptionInfo) {
+func subscriptionHandler(subscriptionChannel chan *zbsubscribe.TaskSubscription) {
 	osCh := make(chan os.Signal, 1)
 	signal.Notify(osCh, os.Interrupt)
-	var subscriptionList []*zbmsgpack.TaskSubscriptionInfo
+	var subscriptionList []*zbsubscribe.TaskSubscription
 
 	for {
 		select {
@@ -94,7 +101,7 @@ func subscriptionHandler(zbClient *zbc.Client, subscriptionChannel chan *zbmsgpa
 		case <-osCh:
 			log.Println("Closing subscriptions")
 			for e := range subscriptionList {
-				zbClient.CloseTaskSubscription(subscriptionList[e])
+				subscriptionList[e].Close()
 			}
 			os.Exit(0)
 		}
