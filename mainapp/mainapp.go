@@ -39,10 +39,11 @@ func startHttpServer() {
 
 func index(w http.ResponseWriter, r *http.Request) {
 	log.Println("Show index")
+	w.Header().Add("content-type", "text/html")
 
-	fmt.Fprintln(w, "Zeebe with Go - Fight of Bud Spencer, Terrence Hill and H7-25")
+	fmt.Fprintln(w, "<pre>Zeebe with Go - Fight of Bud Spencer, Terrence Hill and H7-25")
 	fmt.Fprintln(w, "-------------------------------------------------------------")
-	fmt.Fprintln(w, "/fight ... start a fight")
+	fmt.Fprintln(w, "<a href=\"/fight\">/fight</a> ... start a fight</pre>")
 }
 
 func fight(w http.ResponseWriter, r *http.Request) {
