@@ -11,7 +11,6 @@ import (
 
 const defaultTopicName = "default-topic"
 const brokerPort = "51015"
-const processId = "fight"
 
 type Client struct {
 	zbClient            *zbc.Client

@@ -20,7 +20,7 @@ func (client Client) DeployProcess(processFile string) {
 	log.Println("Deployed Process response state ", response.State)
 }
 
-func (client Client) StartProcess() {
+func (client Client) StartProcess(processId string) {
 	log.Println("Start process ", processId)
 
 	payload := game.NewGame()

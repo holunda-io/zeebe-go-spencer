@@ -50,6 +50,6 @@ func fight(w http.ResponseWriter, r *http.Request) {
 	log.Println("Start fight")
 
 	client := NewClientWithDefaultTopic(common.GetZeebeHost())
-	client.StartProcess()
+	client.StartProcess("fight")
 	fmt.Fprint(w, "Started fight")
 }
